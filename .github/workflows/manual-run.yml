@@ -1,0 +1,102 @@
+name: Manual CVE Monitor Run
+
+on:
+  workflow_dispatch:
+    inputs:
+      lookback_hours:
+        description: 'Hours to look back for CVEs'
+        required: false
+        default: '24'
+        type: string
+      min_cvss:
+        description: 'Minimum CVSS score'
+        required: false
+        default: '7.0'
+        type: string
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  manual-run:
+    name: Manual CVE Monitor Run
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      
+      - name: Create data directories
+        run: |
+          mkdir -p data logs
+      
+      - name: Download previous database
+        uses: actions/download-artifact@v4
+        with:
+          name: gatekeeper-database
+          path: data/
+        continue-on-error: true
+      
+      - name: Run Gatekeeper (Manual)
+        env:
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          RECIPIENT_EMAIL: ${{ secrets.RECIPIENT_EMAIL }}
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+          DATABASE_PATH: ./data/gatekeeper.db
+          LOG_FILE: ./logs/gatekeeper.log
+          LOG_LEVEL: INFO
+          LOOKBACK_HOURS: ${{ inputs.lookback_hours }}
+          MIN_CVSS_SCORE: ${{ inputs.min_cvss }}
+        run: |
+          echo "Running with custom parameters:"
+          echo "  Lookback hours: $LOOKBACK_HOURS"
+          echo "  Minimum CVSS: $MIN_CVSS_SCORE"
+          python -m gatekeeper.run_once
+      
+      - name: Upload database artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: gatekeeper-database
+          path: data/gatekeeper.db
+          retention-days: 90
+      
+      - name: Upload logs
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: gatekeeper-logs-manual-${{ github.run_number }}
+          path: logs/
+          retention-days: 30
+      
+      - name: Summary
+        if: always()
+        run: |
+          echo "## Manual Run Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Parameters:**" >> $GITHUB_STEP_SUMMARY
+          echo "- Lookback Hours: ${{ inputs.lookback_hours }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Minimum CVSS: ${{ inputs.min_cvss }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ -f logs/gatekeeper.log ]; then
+            echo "### Log Output" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            tail -n 30 logs/gatekeeper.log >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          fi

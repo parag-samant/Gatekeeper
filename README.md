@@ -6,6 +6,9 @@ Automated CVE threat intelligence system that collects, enriches, and delivers e
 
 Gatekeeper continuously monitors the NVD (National Vulnerability Database) and CISA KEV (Known Exploited Vulnerabilities) catalog for high-severity vulnerabilities, performs automated OSINT research, and generates professional security advisories delivered via email.
 
+**NEW: GitHub Actions Support** - Run automatically every 12 hours on GitHub infrastructure with zero server costs! See [GitHub Actions Guide](GITHUB_ACTIONS.md).
+
+
 ### Key Features
 
 - **Automated Collection**: Fetches CVE data from NVD API every 12 hours
@@ -36,7 +39,23 @@ Generated advisories follow the CIS MS-ISAC format and include:
 
 ## Quick Start
 
+### Choose Your Deployment Method
+
+#### Option 1: GitHub Actions (Recommended - No Server Required)
+
+Runs automatically every 12 hours on GitHub infrastructure.
+
+1. Fork/clone this repository
+2. Add GitHub Secrets (Settings → Secrets → Actions):
+   - `GMAIL_USER`, `GMAIL_APP_PASSWORD`
+   - `OPENROUTER_API_KEY`, `RECIPIENT_EMAIL`
+3. Enable GitHub Actions
+4. Done! See [Full GitHub Actions Guide](GITHUB_ACTIONS.md)
+
+#### Option 2: Local/Server Deployment
+
 ### Prerequisites
+
 
 - Python 3.12+
 - Gmail account with App Password ([generate here](https://myaccount.google.com/apppasswords))
