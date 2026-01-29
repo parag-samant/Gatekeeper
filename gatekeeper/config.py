@@ -7,9 +7,17 @@ validates required settings, and provides typed access to configuration values.
 
 import os
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List
 from dataclasses import dataclass, field
 from dotenv import load_dotenv
+
+
+@dataclass
+class ProductFilter:
+    """Product/vendor filter criteria."""
+    keywords: List[str] = field(default_factory=list)
+    vendor: Optional[str] = None
+    description: Optional[str] = None
 
 
 @dataclass
@@ -46,8 +54,11 @@ class Config:
     log_file: str = "./logs/gatekeeper.log"
     
     # Filtering Configuration
-    min_cvss_score: float = 7.0
+    min_cvss_score: float = 8.0  # Default to critical/high
     lookback_hours: int = 24
+    filter_config_path: str = "./filters.yaml"
+    product_filters: List[ProductFilter] = field(default_factory=list)
+    exclude_filters: List[ProductFilter] = field(default_factory=list)
     
     # Rate Limiting Configuration
     nvd_requests_per_window: int = 5  # Without API key
@@ -121,11 +132,64 @@ def load_config(env_path: Optional[str] = None) -> Config:
         log_file=os.getenv("LOG_FILE", "./logs/gatekeeper.log"),
         
         # Filtering
-        min_cvss_score=float(os.getenv("MIN_CVSS_SCORE", "7.0")),
+        min_cvss_score=float(os.getenv("MIN_CVSS_SCORE", "8.0")),
         lookback_hours=int(os.getenv("LOOKBACK_HOURS", "24")),
+        filter_config_path=os.getenv("FILTER_CONFIG_PATH", "./filters.yaml"),
     )
     
+    # Load product filters from YAML if file exists
+    product_filters, exclude_filters = load_product_filters(config.filter_config_path)
+    config.product_filters = product_filters
+    config.exclude_filters = exclude_filters
+    
     return config
+
+
+def load_product_filters(config_path: str) -> tuple:
+    """
+    Load product filters from YAML configuration file.
+    
+    Args:
+        config_path: Path to filters.yaml file.
+    
+    Returns:
+        Tuple of (product_filters, exclude_filters) lists.
+    """
+    filter_path = Path(config_path)
+    
+    # If file doesn't exist, return empty filters
+    if not filter_path.exists():
+        return [], []
+    
+    try:
+        import yaml
+        
+        with open(filter_path) as f:
+            data = yaml.safe_load(f) or {}
+        
+        # Load product filters
+        product_filters = []
+        for filter_data in data.get('product_filters', []):
+            product_filters.append(ProductFilter(
+                keywords=filter_data.get('keywords', []),
+                vendor=filter_data.get('vendor'),
+                description=filter_data.get('description')
+            ))
+        
+        # Load exclude filters
+        exclude_filters = []
+        for filter_data in data.get('exclude_filters', []):
+            exclude_filters.append(ProductFilter(
+                keywords=filter_data.get('keywords', []),
+                vendor=filter_data.get('vendor'),
+                description=filter_data.get('description')
+            ))
+        
+        return product_filters, exclude_filters
+        
+    except Exception as e:
+        print(f"Warning: Failed to load product filters from {config_path}: {e}")
+        return [], []
 
 
 def validate_config(config: Config) -> list[str]:

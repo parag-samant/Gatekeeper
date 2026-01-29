@@ -27,6 +27,7 @@ from .deduplication.store import CVEStore, compute_advisory_hash
 from .research.enrichment import CVEEnricher
 from .advisory.generator import AdvisoryGenerator
 from .delivery.email import EmailSender
+from .filtering import CVEFilter
 
 
 def configure_logging(config: Config) -> structlog.BoundLogger:
@@ -99,7 +100,7 @@ class GatekeeperOrchestrator:
         self.kev_client = KEVClient(config)
         self.enricher = CVEEnricher(config, self.kev_client)
         self.generator = AdvisoryGenerator(config)
-        self.email_sender = EmailSender(config)
+        self.email_sender = EmailSender(config)\n        self.cve_filter = CVEFilter(config.product_filters, config.exclude_filters)
         
         self.logger.info("orchestrator_initialized")
     
@@ -282,29 +283,59 @@ class GatekeeperOrchestrator:
     
     def _filter_new_cves(self, cves: List[CVE]) -> List[CVE]:
         """
-        Filter out previously processed CVEs.
+        Filter out previously processed CVEs and non-matching products.
         
         Args:
             cves: List of collected CVEs.
         
         Returns:
-            List of new (unprocessed) CVEs.
+            List of new (unprocessed) CVEs matching product filters.
         """
         new_cves = []
+        filtered_count = 0
         
         for cve in cves:
-            if not self.store.is_processed(cve.cve_id):
-                # Mark as seen
+            # Check if already processed
+            if self.store.is_processed(cve.cve_id):
+                self.logger.debug("cve_already_processed", cve_id=cve.cve_id)
+                continue
+            
+            # Check product/vendor filter
+            if not self.cve_filter.matches_product(cve):
+                filtered_count += 1
+                self.logger.debug(
+                    "cve_filtered_by_product",
+                    cve_id=cve.cve_id,
+                    cvss=cve.highest_cvss_score,
+                    vendor=cve.vendor_names[:2] if cve.vendor_names else None
+                )
+                # Mark as seen but filtered out  
                 self.store.mark_seen(
                     cve_id=cve.cve_id,
                     kev_status=cve.is_in_kev,
                     cvss_score=cve.highest_cvss_score,
                     severity=cve.severity,
-                    title=cve.kev_entry.vulnerability_name if cve.kev_entry else None
+                    title=None
                 )
-                new_cves.append(cve)
-            else:
-                self.logger.debug("cve_already_processed", cve_id=cve.cve_id)
+                continue
+            
+            # CVE is new and matches filters - include it
+            self.store.mark_seen(
+                cve_id=cve.cve_id,
+                kev_status=cve.is_in_kev,
+                cvss_score=cve.highest_cvss_score,
+                severity=cve.severity,
+                title=cve.kev_entry.vulnerability_name if cve.kev_entry else None
+            )
+            new_cves.append(cve)
+        
+        if filtered_count > 0:
+            self.logger.info(
+                "product_filter_applied",
+                total_new=len(cves),
+                filtered_out=filtered_count,
+                passed=len(new_cves)
+            )
         
         return new_cves
     

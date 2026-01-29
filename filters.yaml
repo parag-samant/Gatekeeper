@@ -1,0 +1,265 @@
+# Gatekeeper CVE Filtering Configuration
+# 
+# This file controls which CVEs are processed and sent as advisories.
+# Update this file to customize filtering without changing code.
+
+# CVSS Score Threshold
+# Only process CVEs with CVSS score >= this value
+# 7.0-7.9: High severity
+# 8.0-8.9: Critical severity
+# 9.0-10.0: Critical severity
+min_cvss_score: 8.0
+
+# Product/Vendor Filtering
+# CVEs will be INCLUDED if they match ANY of these filters
+# Each filter can have:
+#   - keywords: List of strings to search for in CVE description/CPEs
+#   - vendor: Vendor name to match (optional, adds additional filtering)
+
+product_filters:
+  # ============================================================
+  # CLOUD PROVIDERS
+  # ============================================================
+  
+  - keywords: ["aws", "amazon web services", "ec2", "s3", "lambda", "cloudfront", "rds", "eks"]
+    vendor: "amazon"
+    description: "Amazon Web Services products"
+  
+  - keywords: ["azure", "microsoft cloud", "azure ad", "entra"]
+    vendor: "microsoft"
+    description: "Microsoft Azure cloud services"
+  
+  - keywords: ["google cloud", "gcp", "firebase", "cloud run"]
+    vendor: "google"
+    description: "Google Cloud Platform services"
+  
+  # ============================================================
+  # OPERATING SYSTEMS
+  # ============================================================
+  
+  - keywords: ["windows", "windows server", "windows 10", "windows 11"]
+    vendor: "microsoft"
+    description: "Microsoft Windows OS"
+  
+  - keywords: ["linux kernel"]
+    description: "Linux kernel vulnerabilities"
+  
+  - keywords: ["ubuntu"]
+    vendor: "canonical"
+    description: "Ubuntu Linux distribution"
+  
+  - keywords: ["debian"]
+    description: "Debian Linux distribution"
+  
+  - keywords: ["redhat", "red hat", "rhel", "centos"]
+    vendor: "redhat"
+    description: "Red Hat Enterprise Linux"
+  
+  - keywords: ["macos", "mac os"]
+    vendor: "apple"
+    description: "Apple macOS"
+  
+  # ============================================================
+  # WEB SERVERS & REVERSE PROXIES
+  # ============================================================
+  
+  - keywords: ["apache http", "httpd"]
+    vendor: "apache"
+    description: "Apache HTTP Server"
+  
+  - keywords: ["nginx"]
+    description: "nginx web server"
+  
+  - keywords: ["iis", "internet information services"]
+    vendor: "microsoft"
+    description: "Microsoft IIS web server"
+  
+  # ============================================================
+  # CONTAINERS & ORCHESTRATION
+  # ============================================================
+  
+  - keywords: ["docker"]
+    description: "Docker containers"
+  
+  - keywords: ["kubernetes", "k8s"]
+    description: "Kubernetes orchestration"
+  
+  - keywords: ["containerd"]
+    description: "containerd runtime"
+  
+  # ============================================================
+  # DATABASES
+  # ============================================================
+  
+  - keywords: ["postgresql", "postgres"]
+    description: "PostgreSQL database"
+  
+  - keywords: ["mysql"]
+    vendor: "oracle"
+    description: "MySQL database"
+  
+  - keywords: ["mariadb"]
+    description: "MariaDB database"
+  
+  - keywords: ["mongodb"]
+    description: "MongoDB database"
+  
+  - keywords: ["redis"]
+    description: "Redis database"
+  
+  - keywords: ["elasticsearch"]
+    description: "Elasticsearch"
+  
+  - keywords: ["microsoft sql server", "mssql"]
+    vendor: "microsoft"
+    description: "Microsoft SQL Server"
+  
+  # ============================================================
+  # PROGRAMMING LANGUAGES & RUNTIMES
+  # ============================================================
+  
+  - keywords: ["python"]
+    description: "Python language/runtime"
+  
+  - keywords: ["node.js", "nodejs"]
+    description: "Node.js runtime"
+  
+  - keywords: ["java"]
+    vendor: "oracle"
+    description: "Java runtime"
+  
+  - keywords: [".net", "dotnet", "asp.net"]
+    vendor: "microsoft"
+    description: ".NET framework/runtime"
+  
+  - keywords: ["php"]
+    description: "PHP language"
+  
+  # ============================================================
+  # WEB FRAMEWORKS & LIBRARIES
+  # ============================================================
+  
+  - keywords: ["react"]
+    description: "React framework"
+  
+  - keywords: ["angular"]
+    description: "Angular framework"
+  
+  - keywords: ["django"]
+    description: "Django framework"
+  
+  - keywords: ["spring", "spring boot"]
+    description: "Spring framework"
+  
+  # ============================================================
+  # BROWSERS
+  # ============================================================
+  
+  - keywords: ["chrome", "chromium"]
+    vendor: "google"
+    description: "Google Chrome browser"
+  
+  - keywords: ["firefox"]
+    vendor: "mozilla"
+    description: "Mozilla Firefox browser"
+  
+  - keywords: ["safari"]
+    vendor: "apple"
+    description: "Apple Safari browser"
+  
+  - keywords: ["edge"]
+    vendor: "microsoft"
+    description: "Microsoft Edge browser"
+  
+  # ============================================================
+  # NETWORKING & SECURITY APPLIANCES
+  # ============================================================
+  
+  - keywords: ["cisco"]
+    vendor: "cisco"
+    description: "Cisco network devices"
+  
+  - keywords: ["fortinet", "fortigate", "fortios"]
+    vendor: "fortinet"
+    description: "Fortinet security appliances"
+  
+  - keywords: ["palo alto", "pan-os"]
+    vendor: "paloaltonetworks"
+    description: "Palo Alto Networks"
+  
+  - keywords: ["checkpoint"]
+    vendor: "checkpoint"
+    description: "Check Point security"
+  
+  # ============================================================
+  # VIRTUALIZATION
+  # ============================================================
+  
+  - keywords: ["vmware", "vsphere", "esxi"]
+    vendor: "vmware"
+    description: "VMware virtualization"
+  
+  - keywords: ["hyper-v"]
+    vendor: "microsoft"
+    description: "Microsoft Hyper-V"
+  
+  # ============================================================
+  # COLLABORATION & PRODUCTIVITY
+  # ============================================================
+  
+  - keywords: ["microsoft office", "excel", "word", "powerpoint", "outlook"]
+    vendor: "microsoft"
+    description: "Microsoft Office products"
+  
+  - keywords: ["sharepoint"]
+    vendor: "microsoft"
+    description: "Microsoft SharePoint"
+  
+  - keywords: ["teams"]
+    vendor: "microsoft"
+    description: "Microsoft Teams"
+  
+  - keywords: ["zoom"]
+    vendor: "zoom"
+    description: "Zoom video conferencing"
+  
+  # ============================================================
+  # VPN & REMOTE ACCESS
+  # ============================================================
+  
+  - keywords: ["vpn"]
+    description: "VPN products"
+  
+  - keywords: ["citrix"]
+    vendor: "citrix"
+    description: "Citrix products"
+  
+  - keywords: ["remote desktop", "rdp"]
+    vendor: "microsoft"
+    description: "Remote Desktop Protocol"
+
+
+# Exclusion Filters (Optional)
+# CVEs matching these will be EXCLUDED even if they match product filters
+# Useful for filtering out noisy categories
+
+exclude_filters:
+  # Example: Exclude WordPress plugins (often too noisy)
+  # - keywords: ["wordpress plugin"]
+  #   description: "WordPress plugins"
+  
+  # Example: Exclude specific mobile platforms if not relevant
+  # - keywords: ["android"]
+  #   description: "Android OS"
+  # 
+  # - keywords: ["ios"]
+  #   vendor: "apple"
+  #   description: "Apple iOS"
+
+# Notes:
+# - Keywords are case-insensitive
+# - Each filter's keywords are OR'ed (match any keyword)
+# - Vendor filtering is additional AND filtering
+# - CVE must match at least ONE product filter to be included
+# - CVE matching ANY exclude filter will be excluded
+# - Empty product_filters list = include all CVEs (only CVSS filtering)
