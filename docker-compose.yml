@@ -1,0 +1,54 @@
+# Gatekeeper CVE Advisory System - Docker Compose Configuration
+
+services:
+  gatekeeper:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: gatekeeper-cve-advisory
+    restart: unless-stopped
+    
+    # Environment configuration
+    env_file:
+      - .env
+    
+    # Persistent storage
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    
+    # Environment overrides (optional)
+    environment:
+      - TZ=UTC
+      - DATABASE_PATH=/app/data/gatekeeper.db
+      - LOG_FILE=/app/logs/gatekeeper.log
+    
+    # Resource limits (adjust as needed)
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+    
+    # Logging configuration
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "python", "-c", "import sqlite3; conn = sqlite3.connect('/app/data/gatekeeper.db'); conn.execute('SELECT 1'); conn.close()"]
+      interval: 5m
+      timeout: 30s
+      retries: 3
+      start_period: 1m
+
+# Optional: Network configuration for additional isolation
+networks:
+  default:
+    name: gatekeeper-network

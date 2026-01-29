@@ -1,0 +1,45 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gatekeeper"
+version = "1.0.0"
+description = "Automated Threat Intelligence CVE & KEV Advisory System"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.10"
+authors = [
+    {name = "Security Automation", email = "security@example.com"}
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Information Technology",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Security",
+]
+dependencies = [
+    "APScheduler>=3.10.4",
+    "requests>=2.31.0",
+    "httpx>=0.27.0",
+    "python-dotenv>=1.0.0",
+    "pydantic>=2.6.0",
+    "duckduckgo-search>=6.0.0",
+    "structlog>=24.1.0",
+    "beautifulsoup4>=4.12.0",
+    "lxml>=5.1.0",
+    "ratelimit>=2.2.1",
+    "backoff>=2.2.1",
+]
+
+[project.scripts]
+gatekeeper = "gatekeeper.main:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["gatekeeper*"]
