@@ -95,12 +95,13 @@ class GatekeeperOrchestrator:
         self.logger = logger
         
         # Initialize components
-        self.store = CVEStore(config.database_path)
+        self.database = Database(config)
         self.nvd_client = NVDClient(config)
         self.kev_client = KEVClient(config)
         self.enricher = CVEEnricher(config, self.kev_client)
         self.generator = AdvisoryGenerator(config)
-        self.email_sender = EmailSender(config)\n        self.cve_filter = CVEFilter(config.product_filters, config.exclude_filters)
+        self.email_sender = EmailSender(config)
+        self.cve_filter = CVEFilter(config.product_filters, config.exclude_filters)
         
         self.logger.info("orchestrator_initialized")
     
