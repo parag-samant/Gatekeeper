@@ -95,7 +95,12 @@ class GatekeeperOrchestrator:
         self.logger = logger
         
         # Initialize components
-        self.database = Database(config)
+        try:
+            self.store = CVEStore(config.database_path)
+        except Exception as e:
+            self.logger.error("database_initialization_failed", error=str(e))
+            raise RuntimeError(f"Failed to initialize database: {str(e)}") from e
+        
         self.nvd_client = NVDClient(config)
         self.kev_client = KEVClient(config)
         self.enricher = CVEEnricher(config, self.kev_client)

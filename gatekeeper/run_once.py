@@ -5,6 +5,7 @@ This module provides a single-run execution mode for GitHub Actions
 and other environments where a continuous scheduler is not appropriate.
 """
 
+import os
 import sys
 import logging
 from pathlib import Path
@@ -112,12 +113,17 @@ def run_single_workflow() -> Dict:
     except Exception as e:
         logger.error("run_failed", error=str(e), exc_info=True)
         print(f"\n❌ Fatal error: {str(e)}")
+        # Ensure cleanup on exception
+        try:
+            if 'orchestrator' in locals():
+                orchestrator.cleanup()
+        except Exception as cleanup_error:
+            logger.error("cleanup_failed", error=str(cleanup_error))
         sys.exit(1)
 
 
 def main():
     """Entry point for one-shot execution."""
-    import os
     run_single_workflow()
 
 
