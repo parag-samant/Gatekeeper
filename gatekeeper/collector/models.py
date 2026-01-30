@@ -168,6 +168,105 @@ class Weakness(BaseModel):
     source: Optional[str] = Field(default=None, description="Source of the weakness mapping")
 
 
+class CPEMatch(BaseModel):
+    """
+    Detailed CPE match configuration with version constraints from NVD.
+    
+    Provides structured access to affected product/version information
+    for enterprise-grade advisory generation.
+    """
+    
+    criteria: str = Field(description="Full CPE 2.3 string")
+    vulnerable: bool = Field(default=True, description="Is this configuration vulnerable")
+    
+    # Version constraints from NVD
+    version_start_including: Optional[str] = Field(default=None, description="Start version (inclusive)")
+    version_start_excluding: Optional[str] = Field(default=None, description="Start version (exclusive)")
+    version_end_including: Optional[str] = Field(default=None, description="End version (inclusive)")
+    version_end_excluding: Optional[str] = Field(default=None, description="End version (exclusive)")
+    
+    # Parsed CPE components
+    vendor: Optional[str] = Field(default=None, description="Vendor name")
+    product: Optional[str] = Field(default=None, description="Product name")
+    version: Optional[str] = Field(default=None, description="Specific version if not a range")
+    
+    @classmethod
+    def from_nvd_match(cls, match_data: Dict[str, Any]) -> "CPEMatch":
+        """
+        Create CPEMatch from NVD cpeMatch data.
+        
+        Args:
+            match_data: CPE match dictionary from NVD API
+        
+        Returns:
+            Parsed CPEMatch instance
+        """
+        criteria = match_data.get("criteria", "")
+        
+        # Parse CPE 2.3 string: cpe:2.3:a:vendor:product:version:update:edition:language:sw_edition:target_sw:target_hw:other
+        vendor, product, version = None, None, None
+        if criteria:
+            parts = criteria.split(":")
+            if len(parts) >= 5:
+                vendor = parts[3].replace("_", " ").replace("-", " ").title() if parts[3] != "*" else None
+                product = parts[4].replace("_", " ").replace("-", " ").title() if parts[4] != "*" else None
+                if len(parts) > 5 and parts[5] not in ("*", "-"):
+                    version = parts[5]
+        
+        return cls(
+            criteria=criteria,
+            vulnerable=match_data.get("vulnerable", True),
+            version_start_including=match_data.get("versionStartIncluding"),
+            version_start_excluding=match_data.get("versionStartExcluding"),
+            version_end_including=match_data.get("versionEndIncluding"),
+            version_end_excluding=match_data.get("versionEndExcluding"),
+            vendor=vendor,
+            product=product,
+            version=version
+        )
+    
+    @property
+    def version_range_text(self) -> str:
+        """
+        Generate human-readable version range text.
+        
+        Returns:
+            Formatted version range string for display in advisories
+        """
+        if self.version and self.version != "*":
+            return f"version {self.version}"
+        
+        parts = []
+        
+        # Start constraint
+        if self.version_start_including:
+            parts.append(f"from {self.version_start_including}")
+        elif self.version_start_excluding:
+            parts.append(f"after {self.version_start_excluding}")
+        
+        # End constraint
+        if self.version_end_including:
+            parts.append(f"to {self.version_end_including}")
+        elif self.version_end_excluding:
+            parts.append(f"before {self.version_end_excluding}")
+        
+        if parts:
+            return " ".join(parts)
+        
+        return "all versions"
+    
+    @property
+    def display_name(self) -> str:
+        """Get vendor product name for display."""
+        parts = []
+        if self.vendor:
+            parts.append(self.vendor)
+        if self.product:
+            parts.append(self.product)
+        return " ".join(parts) if parts else "Unknown Product"
+
+
+
 class KEVEntry(BaseModel):
     """CISA Known Exploited Vulnerability catalog entry."""
     
@@ -244,8 +343,17 @@ class CVE(BaseModel):
     weaknesses: List[Weakness] = Field(default_factory=list, description="Associated CWE weaknesses")
     references: List[Reference] = Field(default_factory=list, description="Reference URLs")
     
-    # Affected products (CPE strings)
-    affected_products: List[str] = Field(default_factory=list, description="Affected CPE configurations")
+    # Affected products - NEW structured format
+    cpe_matches: List[CPEMatch] = Field(default_factory=list, description="Detailed CPE match configurations")
+    vendor_names: List[str] = Field(default_factory=list, description="Extracted vendor names for filtering")
+    product_names: List[str] = Field(default_factory=list, description="Extracted product names for filtering")
+    
+    # Legacy property for backward compatibility
+    @property
+    def affected_products(self) -> List[str]:
+        """Get list of CPE criteria strings (legacy compatibility)."""
+        return [cpe.criteria for cpe in self.cpe_matches]
+
     
     # KEV data (if present)
     kev_entry: Optional[KEVEntry] = Field(default=None, description="KEV catalog entry if listed")
@@ -453,15 +561,24 @@ class CVE(BaseModel):
                 tags=ref.get("tags", [])
             ))
         
-        # Parse affected products from configurations
-        affected_products = []
+        # Parse affected products from configurations with detailed CPE match data
+        cpe_matches = []
+        vendor_names_set = set()
+        product_names_set = set()
+        
         for config in cve.get("configurations", []):
             for node in config.get("nodes", []):
-                for match in node.get("cpeMatch", []):
-                    if match.get("vulnerable"):
-                        criteria = match.get("criteria", "")
-                        if criteria:
-                            affected_products.append(criteria)
+                for match_data in node.get("cpeMatch", []):
+                    if match_data.get("vulnerable", True):
+                        cpe_match = CPEMatch.from_nvd_match(match_data)
+                        cpe_matches.append(cpe_match)
+                        
+                        # Extract vendor/product names for filtering
+                        if cpe_match.vendor:
+                            vendor_names_set.add(cpe_match.vendor)
+                        if cpe_match.product:
+                            product_names_set.add(cpe_match.product)
+
         
         return cls(
             cve_id=cve.get("id", ""),
@@ -475,7 +592,9 @@ class CVE(BaseModel):
             cvss_v2=cvss_v2,
             weaknesses=weaknesses,
             references=references,
-            affected_products=affected_products,
+            cpe_matches=cpe_matches,
+            vendor_names=sorted(list(vendor_names_set)),
+            product_names=sorted(list(product_names_set)),
             evaluator_comment=cve.get("evaluatorComment"),
             evaluator_solution=cve.get("evaluatorSolution"),
             evaluator_impact=cve.get("evaluatorImpact"),

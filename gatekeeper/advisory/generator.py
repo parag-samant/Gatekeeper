@@ -491,6 +491,90 @@ class AdvisoryGenerator:
         
         return "Multiple Vendors" if "multiple" in desc_lower else "Unknown Vendor"
     
+    def _build_affected_products_table(self, cve: "CVE") -> str:
+        """
+        Build detailed HTML table of affected products and versions from CPE data.
+        
+        Args:
+            cve: CVE with parsed CPE match data
+        
+        Returns:
+            HTML table string with vendor/product/version information
+        """
+        if not cve.cpe_matches:
+            # Fallback for CVEs without CPE data
+            vendor, product = self._extract_product_from_description(cve.description)
+            if product != "Unknown Product":
+                return f'''
+                <table class="affected-products-table">
+                    <thead>
+                        <tr>
+                            <th>Vendor</th>
+                            <th>Product</th>
+                            <th>Affected Versions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>{self._escape(vendor)}</strong></td>
+                            <td>{self._escape(product)}</td>
+                            <td>Check vendor advisory for exact versions</td>
+                        </tr>
+                    </tbody>
+                </table>
+                '''
+            else:
+                return '<p><em>Product and version information not available. Refer to vendor security advisory for details.</em></p>'
+        
+        # Group CPE matches by vendor/product
+        products = {}
+        for cpe in cve.cpe_matches:
+            if cpe.vendor and cpe.product:
+                key = (cpe.vendor, cpe.product)
+                if key not in products:
+                    products[key] = []
+                version_text = cpe.version_range_text
+                if version_text not in products[key]:
+                    products[key].append(version_text)
+        
+        if not products:
+            return '<p><em>Product details not available in CPE data</em></p>'
+        
+        # Build table HTML
+        html = '''
+        <table class="affected-products-table">
+            <thead>
+                <tr>
+                    <th>Vendor</th>
+                    <th>Product</th>
+                    <th>Affected Versions</th>
+                </tr>
+            </thead>
+            <tbody>
+'''
+        
+        # Show up to 20 products (most relevant for MSP)
+        for (vendor, product), versions in sorted(products.items())[:20]:
+            version_list = ", ".join(versions)
+            if len(version_list) > 100:
+                version_list = version_list[:97] + "..."
+            
+            html += f'''                <tr>
+                    <td><strong>{self._escape(vendor)}</strong></td>
+                    <td>{self._escape(product)}</td>
+                    <td><code>{self._escape(version_list)}</code></td>
+                </tr>
+'''
+        
+        html += '''            </tbody>
+        </table>
+'''
+        
+        if len(products) > 20:
+            html += f'        <p style="margin-top: 10px; font-size: 13px; color: #666;"><em>Note: {len(products) - 20} additional product configurations not shown. See CVE references for complete affected product list.</em></p>\n'
+        
+        return html
+    
     def _generate_html_advisory(self, enriched_cve: EnrichedCVE) -> str:
         """
         Generate an enterprise-grade HTML advisory when AI fails.
@@ -686,6 +770,39 @@ class AdvisoryGenerator:
         .risk-medium {{ background: {RISK_COLORS['MEDIUM']['bg']}; color: {RISK_COLORS['MEDIUM']['text']}; }}
         .risk-low {{ background: {RISK_COLORS['LOW']['bg']}; color: {RISK_COLORS['LOW']['text']}; }}
         
+        .affected-products-table {{ 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin: 15px 0; 
+            font-size: 14px;
+            background: white;
+        }}
+        .affected-products-table th {{ 
+            background: #1a5f7a;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }}
+        .affected-products-table td {{ 
+            padding: 12px; 
+            border-bottom: 1px solid #e9ecef;
+            vertical-align: top;
+        }}
+        .affected-products-table tr:hover {{
+            background: #f8f9fa;
+        }}
+        .affected-products-table code {{
+            background: #f1f3f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 12px;
+            color: #1a5f7a;
+        }}
+        
         .affected-list {{ 
             list-style: none; 
             padding: 0;
@@ -819,40 +936,16 @@ class AdvisoryGenerator:
         </div>
 '''
         
-        # Systems Affected Section
+        # Systems Affected Section with detailed product/version table
         html_content += '''
         <div class="section">
-            <h2>Systems Affected</h2>
-            <ul class="affected-list">
+            <h2>Affected Products and Versions</h2>
 '''
-        if cve.kev_entry:
-            html_content += f'            <li><strong>{self._escape(cve.kev_entry.vendor_project)}</strong>: {self._escape(cve.kev_entry.product)}</li>\n'
-        
-        if cve.affected_products:
-            seen = set()
-            for cpe in cve.affected_products[:6]:
-                parts = cpe.split(":")
-                if len(parts) >= 5:
-                    vendor = parts[3].replace("_", " ").title()
-                    product = parts[4].replace("_", " ").title()
-                    version = parts[5] if len(parts) > 5 and parts[5] != "*" else "multiple versions"
-                    entry = f"{vendor} {product} ({version})"
-                    if entry not in seen:
-                        html_content += f'            <li><strong>{self._escape(vendor)}</strong>: {self._escape(product)} ({self._escape(version)})</li>\n'
-                        seen.add(entry)
-            if len(cve.affected_products) > 6:
-                html_content += f'            <li><em>...and {len(cve.affected_products) - 6} additional configurations</em></li>\n'
-        else:
-            # Try to extract product info from description when no CPE data
-            vendor, product = self._extract_product_from_description(cve.description)
-            if product != "Unknown Product":
-                html_content += f'            <li><strong>{self._escape(vendor)}</strong>: {self._escape(product)} (check vendor advisory for affected versions)</li>\n'
-            else:
-                html_content += '            <li>Refer to vendor advisory for complete list of affected versions</li>\n'
-        
-        html_content += '''            </ul>
+        html_content += self._build_affected_products_table(cve)
+        html_content += '''
         </div>
 '''
+
         
         # Risk Assessment Section
         def risk_badge(level: str) -> str:
