@@ -188,7 +188,11 @@ def load_product_filters(config_path: str) -> tuple:
         return product_filters, exclude_filters
         
     except Exception as e:
-        print(f"Warning: Failed to load product filters from {config_path}: {e}")
+        import sys
+        print(f"Warning: Failed to load product filters from {config_path}: {e}", file=sys.stderr)
+        # Log more details about the error for troubleshooting
+        if hasattr(e, '__class__'):
+            print(f"  Error type: {e.__class__.__name__}", file=sys.stderr)
         return [], []
 
 
