@@ -11,7 +11,7 @@ on:
       min_cvss:
         description: 'Minimum CVSS score'
         required: false
-        default: '7.0'
+        default: '8.0'
         type: string
 
 permissions:
