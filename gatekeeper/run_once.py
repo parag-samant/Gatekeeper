@@ -56,6 +56,7 @@ def run_single_workflow() -> Dict[str, Any]:
     logger = configure_logging(config)
     logger.info("single_run_started", version="1.0.0", mode="github_actions")
     
+    orchestrator = None
     try:
         # Create orchestrator
         orchestrator = GatekeeperOrchestrator(config, logger)
@@ -118,11 +119,11 @@ def run_single_workflow() -> Dict[str, Any]:
         logger.error("run_failed", error=str(e), exc_info=True)
         print(f"\n❌ Fatal error: {str(e)}")
         # Ensure cleanup on exception
-        try:
-            if 'orchestrator' in locals():
+        if orchestrator is not None:
+            try:
                 orchestrator.cleanup()
-        except Exception as cleanup_error:
-            logger.error("cleanup_failed", error=str(cleanup_error))
+            except Exception as cleanup_error:
+                logger.error("cleanup_failed", error=str(cleanup_error))
         sys.exit(1)
 
 
