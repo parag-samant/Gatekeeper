@@ -13,6 +13,7 @@ import structlog
 from ..config import Config
 from ..collector.models import CVE, EnrichedCVE, ResearchResult
 from ..collector.kev import KEVClient
+from ..collector.circl import CIRCLCollector
 from .duckduckgo import DuckDuckGoSearcher, SearchResultAggregator
 
 logger = structlog.get_logger(__name__)
@@ -37,6 +38,7 @@ class CVEEnricher:
         self.config = config
         self.searcher = DuckDuckGoSearcher(config)
         self.kev_client = kev_client or KEVClient(config)
+        self.circl_collector = CIRCLCollector()  # NEW: CIRCL threat intel
         self.queries_per_cve = config.research_queries_per_cve
         
         logger.info("cve_enricher_initialized", queries_per_cve=self.queries_per_cve)
@@ -58,6 +60,23 @@ class CVEEnricher:
         if kev_entry:
             cve.kev_entry = kev_entry
             logger.info("cve_in_kev", cve_id=cve.cve_id)
+        
+        # CIRCL enrichment (attack patterns, additional context)
+        import asyncio
+        try:
+            asyncio.run(self.circl_collector.enrich_cve(cve))
+            if cve.capec_ids:
+                logger.info(
+                    "circl_enrichment_added",
+                    cve_id=cve.cve_id,
+                    capec_count=len(cve.capec_ids)
+                )
+        except Exception as e:
+            logger.warning(
+                "circl_enrichment_failed",
+                cve_id=cve.cve_id,
+                error=str(e)
+            )
         
         # Determine product name for search
         product = self._extract_product_name(cve)
@@ -90,7 +109,8 @@ class CVEEnricher:
             total_results=len(research_results),
             vendor_advisories=len(enriched.vendor_advisories),
             exploit_refs=len(enriched.exploit_references),
-            in_kev=cve.is_in_kev
+            in_kev=cve.is_in_kev,
+            capec_ids=len(cve.capec_ids)
         )
         
         return enriched

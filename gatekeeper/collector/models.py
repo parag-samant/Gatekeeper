@@ -348,6 +348,9 @@ class CVE(BaseModel):
     vendor_names: List[str] = Field(default_factory=list, description="Extracted vendor names for filtering")
     product_names: List[str] = Field(default_factory=list, description="Extracted product names for filtering")
     
+    # Threat intelligence enrichment (from CIRCL and other feeds)
+    capec_ids: List[str] = Field(default_factory=list, description="CAPEC attack pattern IDs from CIRCL")
+    
     # Legacy property for backward compatibility
     @property
     def affected_products(self) -> List[str]:
@@ -357,6 +360,7 @@ class CVE(BaseModel):
     
     # KEV data (if present)
     kev_entry: Optional[KEVEntry] = Field(default=None, description="KEV catalog entry if listed")
+
     
     # Metadata
     evaluator_comment: Optional[str] = Field(default=None, description="NVD evaluator comment")
