@@ -95,7 +95,7 @@ class GatekeeperOrchestrator:
         self.logger = logger
         
         # Initialize components
-        self.database = Database(config)
+        self.store = CVEStore(config.database_path)
         self.nvd_client = NVDClient(config)
         self.kev_client = KEVClient(config)
         self.enricher = CVEEnricher(config, self.kev_client)
