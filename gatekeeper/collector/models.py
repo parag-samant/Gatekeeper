@@ -348,8 +348,11 @@ class CVE(BaseModel):
     vendor_names: List[str] = Field(default_factory=list, description="Extracted vendor names for filtering")
     product_names: List[str] = Field(default_factory=list, description="Extracted product names for filtering")
     
+    
     # Threat intelligence enrichment (from CIRCL and other feeds)
     capec_ids: List[str] = Field(default_factory=list, description="CAPEC attack pattern IDs from CIRCL")
+    exploit_available: bool = Field(default=False, description="Public exploits available (VulnCheck/Vulners)")
+    exploit_sources: List[str] = Field(default_factory=list, description="Sources of exploit code")
     
     # Legacy property for backward compatibility
     @property

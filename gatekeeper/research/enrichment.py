@@ -14,6 +14,8 @@ from ..config import Config
 from ..collector.models import CVE, EnrichedCVE, ResearchResult
 from ..collector.kev import KEVClient
 from ..collector.circl import CIRCLCollector
+from ..collector.vulncheck import VulnCheckCollector
+from ..collector.vulners import VulnersCollector
 from .duckduckgo import DuckDuckGoSearcher, SearchResultAggregator
 
 logger = structlog.get_logger(__name__)
@@ -38,7 +40,9 @@ class CVEEnricher:
         self.config = config
         self.searcher = DuckDuckGoSearcher(config)
         self.kev_client = kev_client or KEVClient(config)
-        self.circl_collector = CIRCLCollector()  # NEW: CIRCL threat intel
+        self.circl_collector = CIRCLCollector()  # CIRCL threat intel
+        self.vulncheck_collector = VulnCheckCollector()  # VulnCheck (faster updates + exploits)
+        self.vulners_collector = VulnersCollector()  # Vulners (exploit detection)
         self.queries_per_cve = config.research_queries_per_cve
         
         logger.info("cve_enricher_initialized", queries_per_cve=self.queries_per_cve)
@@ -74,6 +78,26 @@ class CVEEnricher:
         except Exception as e:
             logger.warning(
                 "circl_enrichment_failed",
+                cve_id=cve.cve_id,
+                error=str(e)
+            )
+        
+        # VulnCheck enrichment (exploit intelligence, faster updates)
+        try:
+            asyncio.run(self.vulncheck_collector.enrich_cve(cve))
+        except Exception as e:
+            logger.warning(
+                "vulncheck_enrichment_failed",
+                cve_id=cve.cve_id,
+                error=str(e)
+            )
+        
+        # Vulners enrichment (exploit availability detection)
+        try:
+            asyncio.run(self.vulners_collector.enrich_cve(cve))
+        except Exception as e:
+            logger.warning(
+                "vulners_enrichment_failed",
                 cve_id=cve.cve_id,
                 error=str(e)
             )
