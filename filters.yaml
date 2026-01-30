@@ -1,98 +1,92 @@
-# Gatekeeper CVE Filtering Configuration
+# Gatekeeper CVE Filtering Configuration - Navisite MSP Focus
 # 
-# This file controls which CVEs are processed and sent as advisories.
-# Update this file to customize filtering without changing code.
+# Tailored for managed cloud service provider operations
+# Focus: Infrastructure, Security, Databases, Applications managed for clients
 
 # CVSS Score Threshold
-# Only process CVEs with CVSS score >= this value
-# 7.0-7.9: High severity
-# 8.0-8.9: Critical severity
-# 9.0-10.0: Critical severity
 min_cvss_score: 8.0
 
 # Product/Vendor Filtering
-# CVEs will be INCLUDED if they match ANY of these filters
-# Each filter can have:
-#   - keywords: List of strings to search for in CVE description/CPEs
-#   - vendor: Vendor name to match (optional, adds additional filtering)
+# Organized by managed service category
 
 product_filters:
   # ============================================================
-  # CLOUD PROVIDERS
+  # MANAGED CLOUD - Public Cloud Platforms
   # ============================================================
   
-  - keywords: ["aws", "amazon web services", "ec2", "s3", "lambda", "cloudfront", "rds", "eks"]
+  - keywords: ["aws", "amazon web services", "ec2", "s3", "rds", "lambda", "cloudfront", "eks", "ecs", "elastic beanstalk", "route 53", "cloudwatch", "elastic load balancing", "vpc"]
     vendor: "amazon"
-    description: "Amazon Web Services products"
+    description: "AWS - Amazon Web Services (all services)"
   
-  - keywords: ["azure", "microsoft cloud", "azure ad", "entra"]
+  - keywords: ["azure", "microsoft azure", "azure active directory", "azure ad", "entra id", "azure sql", "azure storage", "azure virtual machines", "azure kubernetes", "aks", "azure functions", "azure app service"]
     vendor: "microsoft"
-    description: "Microsoft Azure cloud services"
+    description: "Microsoft Azure - All Azure services"
   
-  - keywords: ["google cloud", "gcp", "firebase", "cloud run"]
+  - keywords: ["google cloud", "gcp", "google compute engine", "google kubernetes engine", "gke", "cloud sql", "cloud storage", "cloud run", "app engine", "bigquery"]
     vendor: "google"
-    description: "Google Cloud Platform services"
+    description: "Google Cloud Platform - All GCP services"
   
   # ============================================================
-  # OPERATING SYSTEMS
+  # MANAGED CLOUD - Private Cloud / Virtualization
   # ============================================================
   
-  - keywords: ["windows", "windows server", "windows 10", "windows 11"]
+  - keywords: ["vmware", "vsphere", "esxi", "vcenter", "vsan", "nsx", "vrealize", "horizon"]
+    vendor: "vmware"
+    description: "VMware virtualization platform"
+  
+  - keywords: ["hyper-v", "windows server hyper-v", "system center virtual machine manager", "scvmm"]
     vendor: "microsoft"
-    description: "Microsoft Windows OS"
+    description: "Microsoft Hyper-V virtualization"
+  
+  - keywords: ["nutanix", "acropolis", "prism"]
+    vendor: "nutanix"
+    description: "Nutanix hyperconverged infrastructure"
+  
+  - keywords: ["citrix hypervisor", "xenserver"]
+    vendor: "citrix"
+    description: "Citrix virtualization"
+  
+  # ============================================================
+  # MANAGED OS - Operating Systems
+  # ============================================================
+  
+  - keywords: ["windows server", "windows server 2016", "windows server 2019", "windows server 2022", "active directory", "domain controller"]
+    vendor: "microsoft"
+    description: "Windows Server operating systems"
   
   - keywords: ["linux kernel"]
-    description: "Linux kernel vulnerabilities"
+    description: "Linux kernel (affects all distributions)"
   
-  - keywords: ["ubuntu"]
-    vendor: "canonical"
-    description: "Ubuntu Linux distribution"
-  
-  - keywords: ["debian"]
-    description: "Debian Linux distribution"
-  
-  - keywords: ["redhat", "red hat", "rhel", "centos"]
+  - keywords: ["red hat enterprise linux", "rhel", "centos stream", "centos"]
     vendor: "redhat"
     description: "Red Hat Enterprise Linux"
   
-  - keywords: ["macos", "mac os"]
-    vendor: "apple"
-    description: "Apple macOS"
+  - keywords: ["ubuntu server", "ubuntu"]
+    vendor: "canonical"
+    description: "Ubuntu Server"
+  
+  - keywords: ["debian"]
+    description: "Debian Linux"
+  
+  - keywords: ["suse linux", "sles", "suse enterprise"]
+    vendor: "suse"
+    description: "SUSE Linux Enterprise Server"
+  
+  - keywords: ["oracle linux"]
+    vendor: "oracle"
+    description: "Oracle Linux"
   
   # ============================================================
-  # WEB SERVERS & REVERSE PROXIES
+  # MANAGED DATABASE - Database Systems
   # ============================================================
   
-  - keywords: ["apache http", "httpd"]
-    vendor: "apache"
-    description: "Apache HTTP Server"
-  
-  - keywords: ["nginx"]
-    description: "nginx web server"
-  
-  - keywords: ["iis", "internet information services"]
+  - keywords: ["microsoft sql server", "mssql", "sql server 2016", "sql server 2019", "sql server 2022"]
     vendor: "microsoft"
-    description: "Microsoft IIS web server"
+    description: "Microsoft SQL Server"
   
-  # ============================================================
-  # CONTAINERS & ORCHESTRATION
-  # ============================================================
-  
-  - keywords: ["docker"]
-    description: "Docker containers"
-  
-  - keywords: ["kubernetes", "k8s"]
-    description: "Kubernetes orchestration"
-  
-  - keywords: ["containerd"]
-    description: "containerd runtime"
-  
-  # ============================================================
-  # DATABASES
-  # ============================================================
-  
-  - keywords: ["postgresql", "postgres"]
-    description: "PostgreSQL database"
+  - keywords: ["oracle database", "oracle db"]
+    vendor: "oracle"
+    description: "Oracle Database"
   
   - keywords: ["mysql"]
     vendor: "oracle"
@@ -101,165 +95,319 @@ product_filters:
   - keywords: ["mariadb"]
     description: "MariaDB database"
   
+  - keywords: ["postgresql", "postgres"]
+    description: "PostgreSQL database"
+  
   - keywords: ["mongodb"]
+    vendor: "mongodb"
     description: "MongoDB database"
   
   - keywords: ["redis"]
-    description: "Redis database"
+    description: "Redis in-memory database"
   
-  - keywords: ["elasticsearch"]
-    description: "Elasticsearch"
+  - keywords: ["cassandra"]
+    vendor: "apache"
+    description: "Apache Cassandra"
   
-  - keywords: ["microsoft sql server", "mssql"]
+  - keywords: ["db2"]
+    vendor: "ibm"
+    description: "IBM DB2"
+  
+  # ============================================================
+  # MANAGED HOSTING - Web Servers & Application Servers
+  # ============================================================
+  
+  - keywords: ["iis", "internet information services", "internet information server"]
     vendor: "microsoft"
-    description: "Microsoft SQL Server"
+    description: "Microsoft IIS web server"
   
-  # ============================================================
-  # PROGRAMMING LANGUAGES & RUNTIMES
-  # ============================================================
+  - keywords: ["apache http", "apache httpd", "apache web server"]
+    vendor: "apache"
+    description: "Apache HTTP Server"
   
-  - keywords: ["python"]
-    description: "Python language/runtime"
+  - keywords: ["nginx"]
+    description: "nginx web server"
   
-  - keywords: ["node.js", "nodejs"]
-    description: "Node.js runtime"
+  - keywords: ["tomcat", "apache tomcat"]
+    vendor: "apache"
+    description: "Apache Tomcat application server"
   
-  - keywords: ["java"]
+  - keywords: ["jboss", "wildfly"]
+    vendor: "redhat"
+    description: "JBoss/WildFly application server"
+  
+  - keywords: ["weblogic"]
     vendor: "oracle"
-    description: "Java runtime"
+    description: "Oracle WebLogic Server"
   
-  - keywords: [".net", "dotnet", "asp.net"]
-    vendor: "microsoft"
-    description: ".NET framework/runtime"
-  
-  - keywords: ["php"]
-    description: "PHP language"
+  - keywords: ["websphere"]
+    vendor: "ibm"
+    description: "IBM WebSphere"
   
   # ============================================================
-  # WEB FRAMEWORKS & LIBRARIES
+  # MANAGED APPLICATION - Containers & Orchestration
   # ============================================================
   
-  - keywords: ["react"]
-    description: "React framework"
+  - keywords: ["docker", "docker engine", "docker desktop"]
+    description: "Docker container runtime"
   
-  - keywords: ["angular"]
-    description: "Angular framework"
+  - keywords: ["kubernetes", "k8s"]
+    description: "Kubernetes orchestration"
   
-  - keywords: ["django"]
-    description: "Django framework"
+  - keywords: ["containerd"]
+    description: "containerd runtime"
   
-  - keywords: ["spring", "spring boot"]
-    description: "Spring framework"
+  - keywords: ["openshift"]
+    vendor: "redhat"
+    description: "Red Hat OpenShift"
   
-  # ============================================================
-  # BROWSERS
-  # ============================================================
-  
-  - keywords: ["chrome", "chromium"]
-    vendor: "google"
-    description: "Google Chrome browser"
-  
-  - keywords: ["firefox"]
-    vendor: "mozilla"
-    description: "Mozilla Firefox browser"
-  
-  - keywords: ["safari"]
-    vendor: "apple"
-    description: "Apple Safari browser"
-  
-  - keywords: ["edge"]
-    vendor: "microsoft"
-    description: "Microsoft Edge browser"
+  - keywords: ["rancher"]
+    description: "Rancher container management"
   
   # ============================================================
-  # NETWORKING & SECURITY APPLIANCES
+  # MANAGED SECURITY - Firewalls & Network Security
   # ============================================================
   
-  - keywords: ["cisco"]
+  - keywords: ["cisco asa", "cisco firepower", "cisco adaptive security appliance"]
     vendor: "cisco"
-    description: "Cisco network devices"
+    description: "Cisco firewalls and security appliances"
   
-  - keywords: ["fortinet", "fortigate", "fortios"]
+  - keywords: ["fortinet", "fortigate", "fortios", "fortianalyzer", "fortimanager"]
     vendor: "fortinet"
     description: "Fortinet security appliances"
   
-  - keywords: ["palo alto", "pan-os"]
+  - keywords: ["palo alto", "pan-os", "palo alto networks"]
     vendor: "paloaltonetworks"
-    description: "Palo Alto Networks"
+    description: "Palo Alto Networks firewalls"
   
-  - keywords: ["checkpoint"]
+  - keywords: ["checkpoint", "check point"]
     vendor: "checkpoint"
     description: "Check Point security"
   
+  - keywords: ["sonicwall"]
+    vendor: "sonicwall"
+    description: "SonicWall firewalls"
+  
+  - keywords: ["f5 big-ip", "f5 networks"]
+    vendor: "f5"
+    description: "F5 BIG-IP load balancers"
+  
+  - keywords: ["juniper", "junos", "srx"]
+    vendor: "juniper"
+    description: "Juniper Networks security"
+  
   # ============================================================
-  # VIRTUALIZATION
+  # MANAGED SECURITY - VPN & Remote Access
   # ============================================================
   
-  - keywords: ["vmware", "vsphere", "esxi"]
+  - keywords: ["cisco anyconnect", "cisco vpn"]
+    vendor: "cisco"
+    description: "Cisco VPN solutions"
+  
+  - keywords: ["fortinet ssl vpn", "forticlient"]
+    vendor: "fortinet"
+    description: "Fortinet VPN"
+  
+  - keywords: ["palo alto globalprotect"]
+    vendor: "paloaltonetworks"
+    description: "Palo Alto GlobalProtect VPN"
+  
+  - keywords: ["citrix gateway", "citrix netscaler", "citrix adc"]
+    vendor: "citrix"
+    description: "Citrix remote access"
+  
+  - keywords: ["remote desktop", "rdp", "remote desktop protocol", "remote desktop services", "terminal services"]
+    vendor: "microsoft"
+    description: "Microsoft Remote Desktop"
+  
+  - keywords: ["openvpn"]
+    description: "OpenVPN"
+  
+  # ============================================================
+  # MANAGED SECURITY - Endpoint Protection & Antivirus
+  # ============================================================
+  
+  - keywords: ["crowdstrike", "falcon"]
+    vendor: "crowdstrike"
+    description: "CrowdStrike Falcon endpoint protection"
+  
+  - keywords: ["symantec endpoint protection", "sep", "symantec antivirus"]
+    vendor: "symantec"
+    description: "Symantec endpoint protection"
+  
+  - keywords: ["mcafee", "trellix"]
+    vendor: "mcafee"
+    description: "McAfee/Trellix security"
+  
+  - keywords: ["trend micro", "deep security", "officescan"]
+    vendor: "trendmicro"
+    description: "Trend Micro security"
+  
+  - keywords: ["sophos", "intercept x"]
+    vendor: "sophos"
+    description: "Sophos endpoint protection"
+  
+  - keywords: ["microsoft defender", "windows defender", "defender for endpoint"]
+    vendor: "microsoft"
+    description: "Microsoft Defender"
+  
+  # ============================================================
+  # MANAGED SECURITY - SIEM & Monitoring
+  # ============================================================
+  
+  - keywords: ["splunk"]
+    vendor: "splunk"
+    description: "Splunk SIEM"
+  
+  - keywords: ["ibm qradar", "qradar"]
+    vendor: "ibm"
+    description: "IBM QRadar SIEM"
+  
+  - keywords: ["logrhythm"]
+    vendor: "logrhythm"
+    description: "LogRhythm SIEM"
+  
+  - keywords: ["elastic", "elasticsearch", "elk stack", "elastic stack"]
+    vendor: "elastic"
+    description: "Elastic Stack / ELK"
+  
+  # ============================================================
+  # NETWORK INFRASTRUCTURE - Switches, Routers, Load Balancers
+  # ============================================================
+  
+  - keywords: ["cisco ios", "cisco catalyst", "cisco nexus"]
+    vendor: "cisco"
+    description: "Cisco network infrastructure"
+  
+  - keywords: ["juniper junos"]
+    vendor: "juniper"
+    description: "Juniper network devices"
+  
+  - keywords: ["arista eos"]
+    vendor: "arista"
+    description: "Arista network switches"
+  
+  - keywords: ["haproxy"]
+    description: "HAProxy load balancer"
+  
+  # ============================================================
+  # BACKUP & DISASTER RECOVERY
+  # ============================================================
+  
+  - keywords: ["veeam", "veeam backup"]
+    vendor: "veeam"
+    description: "Veeam backup solutions"
+  
+  - keywords: ["commvault"]
+    vendor: "commvault"
+    description: "Commvault backup"
+  
+  - keywords: ["veritas netbackup", "veritas backup exec"]
+    vendor: "veritas"
+    description: "Veritas backup solutions"
+  
+  - keywords: ["rubrik"]
+    vendor: "rubrik"
+    description: "Rubrik data management"
+  
+  # ============================================================
+  # MANAGEMENT & MONITORING TOOLS
+  # ============================================================
+  
+  - keywords: ["vmware vrealize", "vmware vrealize operations", "vmware vrealize log insight"]
     vendor: "vmware"
-    description: "VMware virtualization"
+    description: "VMware management tools"
   
-  - keywords: ["hyper-v"]
+  - keywords: ["system center", "sccm", "system center configuration manager", "system center operations manager", "scom"]
     vendor: "microsoft"
-    description: "Microsoft Hyper-V"
+    description: "Microsoft System Center"
+  
+  - keywords: ["nagios"]
+    description: "Nagios monitoring"
+  
+  - keywords: ["zabbix"]
+    description: "Zabbix monitoring"
+  
+  - keywords: ["prometheus"]
+    description: "Prometheus monitoring"
+  
+  - keywords: ["grafana"]
+    description: "Grafana dashboards"
   
   # ============================================================
-  # COLLABORATION & PRODUCTIVITY
+  # COLLABORATION & PRODUCTIVITY (Managed Services)
   # ============================================================
   
-  - keywords: ["microsoft office", "excel", "word", "powerpoint", "outlook"]
+  - keywords: ["microsoft exchange", "exchange server"]
     vendor: "microsoft"
-    description: "Microsoft Office products"
+    description: "Microsoft Exchange Server"
   
-  - keywords: ["sharepoint"]
+  - keywords: ["microsoft sharepoint", "sharepoint server"]
     vendor: "microsoft"
     description: "Microsoft SharePoint"
   
-  - keywords: ["teams"]
+  - keywords: ["microsoft teams"]
     vendor: "microsoft"
     description: "Microsoft Teams"
   
+  - keywords: ["microsoft office", "office 365", "microsoft 365"]
+    vendor: "microsoft"
+    description: "Microsoft Office/O365/M365"
+  
   - keywords: ["zoom"]
     vendor: "zoom"
-    description: "Zoom video conferencing"
+    description: "Zoom"
   
   # ============================================================
-  # VPN & REMOTE ACCESS
+  # DNS & DHCP Services
   # ============================================================
   
-  - keywords: ["vpn"]
-    description: "VPN products"
+  - keywords: ["bind", "bind9", "dns server"]
+    description: "BIND DNS server"
   
-  - keywords: ["citrix"]
-    vendor: "citrix"
-    description: "Citrix products"
-  
-  - keywords: ["remote desktop", "rdp"]
+  - keywords: ["active directory dns", "windows dns"]
     vendor: "microsoft"
-    description: "Remote Desktop Protocol"
+    description: "Windows DNS Server"
+  
+  - keywords: ["dhcp server", "isc dhcp"]
+    description: "DHCP services"
+  
+  # ============================================================
+  # FILE & STORAGE SYSTEMS
+  # ============================================================
+  
+  - keywords: ["netapp", "ontap", "data ontap"]
+    vendor: "netapp"
+    description: "NetApp storage systems"
+  
+  - keywords: ["dell emc", "emc unity", "emc powerstore", "emc isilon"]
+    vendor: "dell"
+    description: "Dell EMC storage"
+  
+  - keywords: ["pure storage"]
+    vendor: "purestorage"
+    description: "Pure Storage systems"
+  
+  - keywords: ["windows file server", "smb", "cifs"]
+    vendor: "microsoft"
+    description: "Windows file services"
+  
+  - keywords: ["nfs server"]
+    description: "NFS file services"
 
 
-# Exclusion Filters (Optional)
-# CVEs matching these will be EXCLUDED even if they match product filters
-# Useful for filtering out noisy categories
+# Exclusion Filters
+# Exclude categories not relevant to MSP operations
 
 exclude_filters:
-  # Example: Exclude WordPress plugins (often too noisy)
-  # - keywords: ["wordpress plugin"]
-  #   description: "WordPress plugins"
+  # Consumer/end-user products
+  - keywords: ["wordpress plugin", "wordpress theme"]
+    description: "WordPress plugins (too granular for MSP focus)"
   
-  # Example: Exclude specific mobile platforms if not relevant
-  # - keywords: ["android"]
-  #   description: "Android OS"
-  # 
-  # - keywords: ["ios"]
-  #   vendor: "apple"
-  #   description: "Apple iOS"
-
-# Notes:
-# - Keywords are case-insensitive
-# - Each filter's keywords are OR'ed (match any keyword)
-# - Vendor filtering is additional AND filtering
-# - CVE must match at least ONE product filter to be included
-# - CVE matching ANY exclude filter will be excluded
-# - Empty product_filters list = include all CVEs (only CVSS filtering)
+  # Mobile platforms (unless managing MDM)
+  - keywords: ["android app", "ios app"]
+    description: "Individual mobile apps (not infrastructure)"
+  
+  # Desktop applications (unless critical)
+  - keywords: ["adobe reader", "adobe acrobat reader"]
+    description: "Desktop productivity apps (help desk scope)"
