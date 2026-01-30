@@ -145,6 +145,66 @@ product_filters:
     description: "IBM WebSphere"
   
   # ============================================================
+  # MANAGED CITRIX & DaaS (Desktop as a Service)
+  # ============================================================
+  
+  - keywords: ["citrix virtual apps", "citrix virtual desktops", "citrix vad", "xenapp", "xendesktop", "cvad"]
+    vendor: "citrix"
+    description: "Citrix Virtual Apps and Desktops"
+  
+  - keywords: ["citrix workspace", "citrix receiver", "citrix workspace app"]
+    vendor: "citrix"
+    description: "Citrix Workspace"
+  
+  - keywords: ["citrix adc", "citrix netscaler", "citrix application delivery controller"]
+    vendor: "citrix"
+    description: "Citrix ADC/NetScaler"
+  
+  - keywords: ["citrix gateway", "citrix access gateway"]
+    vendor: "citrix"
+    description: "Citrix Gateway (remote access)"
+  
+  - keywords: ["citrix provisioning", "citrix pvs", "provisioning services"]
+    vendor: "citrix"
+    description: "Citrix Provisioning Services"
+  
+  - keywords: ["citrix director", "citrix studio"]
+    vendor: "citrix"
+    description: "Citrix management tools"
+  
+  - keywords: ["citrix storefront"]
+    vendor: "citrix"
+    description: "Citrix StoreFront"
+  
+  - keywords: ["citrix licensing", "citrix license server"]
+    vendor: "citrix"
+    description: "Citrix Licensing"
+  
+  - keywords: ["citrix hypervisor", "xenserver"]
+    vendor: "citrix"
+    description: "Citrix Hypervisor (XenServer)"
+  
+  - keywords: ["vmware horizon", "vmware horizon view", "horizon client", "horizon connection server"]
+    vendor: "vmware"
+    description: "VMware Horizon VDI/DaaS"
+  
+  - keywords: ["azure virtual desktop", "avd", "windows virtual desktop", "wvd"]
+    vendor: "microsoft"
+    description: "Azure Virtual Desktop (AVD/WVD)"
+  
+  - keywords: ["amazon workspaces", "aws workspaces"]
+    vendor: "amazon"
+    description: "Amazon WorkSpaces DaaS"
+  
+  - keywords: ["vmware app volumes", "vmware dynamic environment manager", "vmware dem"]
+    vendor: "vmware"
+    description: "VMware app/user environment management"
+  
+  - keywords: ["fslogix", "profile container"]
+    vendor: "microsoft"
+    description: "FSLogix profile management"
+  
+  # ============================================================
   # MANAGED APPLICATION - Containers & Orchestration
   # ============================================================
   
