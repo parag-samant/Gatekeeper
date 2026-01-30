@@ -5,10 +5,11 @@ This module provides a single-run execution mode for GitHub Actions
 and other environments where a continuous scheduler is not appropriate.
 """
 
+import os
 import sys
 import logging
 from pathlib import Path
-from typing import Dict
+from typing import Dict, Any
 
 import structlog
 
@@ -16,7 +17,7 @@ from .config import Config, load_config, validate_config
 from .main import GatekeeperOrchestrator, configure_logging
 
 
-def run_single_workflow() -> Dict:
+def run_single_workflow() -> Dict[str, Any]:
     """
     Execute a single workflow run without scheduling.
     
@@ -55,6 +56,7 @@ def run_single_workflow() -> Dict:
     logger = configure_logging(config)
     logger.info("single_run_started", version="1.0.0", mode="github_actions")
     
+    orchestrator = None
     try:
         # Create orchestrator
         orchestrator = GatekeeperOrchestrator(config, logger)
@@ -91,12 +93,16 @@ def run_single_workflow() -> Dict:
         
         # Set GitHub Actions output if available
         if github_output := os.getenv("GITHUB_OUTPUT"):
-            with open(github_output, "a") as f:
-                f.write(f"cves_collected={stats['cves_collected']}\n")
-                f.write(f"cves_new={stats['cves_new']}\n")
-                f.write(f"cves_processed={stats['cves_processed']}\n")
-                f.write(f"cves_emailed={stats['cves_emailed']}\n")
-                f.write(f"errors={stats['errors']}\n")
+            try:
+                with open(github_output, "a") as f:
+                    f.write(f"cves_collected={stats['cves_collected']}\n")
+                    f.write(f"cves_new={stats['cves_new']}\n")
+                    f.write(f"cves_processed={stats['cves_processed']}\n")
+                    f.write(f"cves_emailed={stats['cves_emailed']}\n")
+                    f.write(f"errors={stats['errors']}\n")
+                logger.info("github_output_written", path=github_output)
+            except Exception as e:
+                logger.warning("github_output_write_failed", error=str(e))
         
         # Exit with appropriate code
         if stats["errors"] > 0 and stats["cves_emailed"] == 0:
@@ -112,12 +118,17 @@ def run_single_workflow() -> Dict:
     except Exception as e:
         logger.error("run_failed", error=str(e), exc_info=True)
         print(f"\n❌ Fatal error: {str(e)}")
+        # Ensure cleanup on exception
+        if orchestrator is not None:
+            try:
+                orchestrator.cleanup()
+            except Exception as cleanup_error:
+                logger.error("cleanup_failed", error=str(cleanup_error))
         sys.exit(1)
 
 
 def main():
     """Entry point for one-shot execution."""
-    import os
     run_single_workflow()
 
 

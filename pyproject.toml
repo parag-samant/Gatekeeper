@@ -35,6 +35,7 @@ dependencies = [
     "lxml>=5.1.0",
     "ratelimit>=2.2.1",
     "backoff>=2.2.1",
+    "pyyaml>=6.0.1",
 ]
 
 [project.scripts]
