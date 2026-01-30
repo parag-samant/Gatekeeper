@@ -9,7 +9,7 @@ import os
 import sys
 import logging
 from pathlib import Path
-from typing import Dict
+from typing import Dict, Any
 
 import structlog
 
@@ -17,7 +17,7 @@ from .config import Config, load_config, validate_config
 from .main import GatekeeperOrchestrator, configure_logging
 
 
-def run_single_workflow() -> Dict:
+def run_single_workflow() -> Dict[str, Any]:
     """
     Execute a single workflow run without scheduling.
     
@@ -92,12 +92,16 @@ def run_single_workflow() -> Dict:
         
         # Set GitHub Actions output if available
         if github_output := os.getenv("GITHUB_OUTPUT"):
-            with open(github_output, "a") as f:
-                f.write(f"cves_collected={stats['cves_collected']}\n")
-                f.write(f"cves_new={stats['cves_new']}\n")
-                f.write(f"cves_processed={stats['cves_processed']}\n")
-                f.write(f"cves_emailed={stats['cves_emailed']}\n")
-                f.write(f"errors={stats['errors']}\n")
+            try:
+                with open(github_output, "a") as f:
+                    f.write(f"cves_collected={stats['cves_collected']}\n")
+                    f.write(f"cves_new={stats['cves_new']}\n")
+                    f.write(f"cves_processed={stats['cves_processed']}\n")
+                    f.write(f"cves_emailed={stats['cves_emailed']}\n")
+                    f.write(f"errors={stats['errors']}\n")
+                logger.info("github_output_written", path=github_output)
+            except Exception as e:
+                logger.warning("github_output_write_failed", error=str(e))
         
         # Exit with appropriate code
         if stats["errors"] > 0 and stats["cves_emailed"] == 0:

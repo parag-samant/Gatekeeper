@@ -6,6 +6,7 @@ validates required settings, and provides typed access to configuration values.
 """
 
 import os
+import sys
 from pathlib import Path
 from typing import Optional, List
 from dataclasses import dataclass, field
@@ -188,7 +189,6 @@ def load_product_filters(config_path: str) -> tuple:
         return product_filters, exclude_filters
         
     except Exception as e:
-        import sys
         print(f"Warning: Failed to load product filters from {config_path}: {e}", file=sys.stderr)
         # Log more details about the error for troubleshooting
         if hasattr(e, '__class__'):
